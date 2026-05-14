@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminAnnouncement, useSaveAnnouncement } from "@/features/announcements/hooks";
 import { toast } from "@/components/ui/toaster";
+import { DateInput } from "@/components/ui/date-input";
 
 function InfoTooltip({ text }: { text: string }) {
   return (
@@ -163,10 +164,10 @@ export function AnnouncementEditor({
                 Expiration date (optional)
                 <InfoTooltip text="After this date, the announcement will no longer be shown on the public site. Leave blank to never expire." />
               </Label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.expires_at}
-                onChange={f("expires_at")}
+                onChange={(iso) => setForm((p) => ({ ...p, expires_at: iso }))}
+                placeholder="e.g. Jun 30, 2025 or 6/30/25"
               />
               {form.expires_at && (
                 <button

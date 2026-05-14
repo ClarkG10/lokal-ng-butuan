@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/toaster";
 import { api } from "@/lib/api";
 import { Download, Search, Upload, FileSpreadsheet, X, CheckCircle2, AlertCircle, Pencil, UserPlus } from "lucide-react";
 import { Portal } from "@/components/ui/portal";
+import { DateInput } from "@/components/ui/date-input";
 import { formatDate } from "@/lib/utils";
 
 const AFFILIATION_TONE: Record<Affiliation, "upcoming" | "ongoing" | "completed"> = {
@@ -319,8 +320,13 @@ function AddEditMemberModal({
 
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Birthdate</label>
-            <Input type="date" value={form.birthdate} onChange={(e) => set("birthdate", e.target.value)} max={new Date().toISOString().split("T")[0]} />
-            <p className="text-xs text-muted-foreground">Used to generate the login code.</p>
+            <DateInput
+              value={form.birthdate}
+              onChange={(iso) => set("birthdate", iso)}
+              max={new Date().toISOString().split("T")[0]}
+              placeholder="e.g. May 21, 2002 or 5/21/02"
+              hint="Used to generate the login code."
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
