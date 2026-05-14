@@ -13,9 +13,14 @@ import { Portal } from "@/components/ui/portal";
 
 export function isoToDisplay(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  // Accept full datetimes ("2026-05-14 00:00:00" or "2026-05-14T00:00:00") — take date part only
+  const dateStr = iso.slice(0, 10);
+  const [y, m, d] = dateStr.split("-");
   const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${names[parseInt(m, 10) - 1]} ${parseInt(d, 10)}, ${y}`;
+  const mi = parseInt(m, 10);
+  const di = parseInt(d, 10);
+  if (!names[mi - 1] || isNaN(di)) return "";
+  return `${names[mi - 1]} ${di}, ${y}`;
 }
 
 /** Parse many date text formats → ISO YYYY-MM-DD, or null if unrecognised. */
@@ -88,20 +93,31 @@ interface CalendarModalProps {
 
 function CalendarModal({ value, onChange, onClose, min, max }: CalendarModalProps) {
   const today = new Date();
-  const maxDate = max ? new Date(max + "T00:00:00") : null;
-  const minDate = min ? new Date(min + "T00:00:00") : null;
 
-  const init = value
-    ? new Date(value + "T00:00:00")
+  // Sanitize to YYYY-MM-DD only (handle "YYYY-MM-DD HH:MM:SS" or ISO datetimes)
+  const isoValue = (value ?? "").slice(0, 10);
+  const isValidIso = /^\d{4}-\d{2}-\d{2}$/.test(isoValue);
+
+  const maxDate = max ? new Date(max.slice(0, 10) + "T00:00:00") : null;
+  const minDate = min ? new Date(min.slice(0, 10) + "T00:00:00") : null;
+  const safeMaxDate = maxDate && !isNaN(maxDate.getTime()) ? maxDate : null;
+  const safeMinDate = minDate && !isNaN(minDate.getTime()) ? minDate : null;
+
+  const initDate = isValidIso
+    ? new Date(isoValue + "T00:00:00")
     : new Date(today.getFullYear() - 25, today.getMonth(), 1);
+  const initYear = isNaN(initDate.getFullYear()) ? today.getFullYear() - 25 : initDate.getFullYear();
+  const initMonth = isNaN(initDate.getMonth()) ? today.getMonth() : initDate.getMonth();
 
-  const [vy, setVy] = useState(init.getFullYear());
-  const [vm, setVm] = useState(init.getMonth());
+  const [vy, setVy] = useState(initYear);
+  const [vm, setVm] = useState(initMonth);
   const [yearPicker, setYearPicker] = useState(false);
 
-  const selParts = value ? value.split("-").map(Number) : null;
-  const offset = new Date(vy, vm, 1).getDay();
-  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
+  const selParts = isValidIso ? isoValue.split("-").map(Number) : null;
+  const rawOffset = new Date(vy, vm, 1).getDay();
+  const offset = isNaN(rawOffset) ? 0 : rawOffset;
+  const rawDays = new Date(vy, vm + 1, 0).getDate();
+  const daysInMonth = isNaN(rawDays) || rawDays < 1 ? 30 : rawDays;
   const cells: (number | null)[] = [
     ...Array(offset).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -113,8 +129,8 @@ function CalendarModal({ value, onChange, onClose, min, max }: CalendarModalProp
     today.getFullYear() === vy && today.getMonth() === vm && today.getDate() === d;
   const isDisabled = (d: number) => {
     const cell = new Date(vy, vm, d);
-    if (maxDate && cell > maxDate) return true;
-    if (minDate && cell < minDate) return true;
+    if (safeMaxDate && cell > safeMaxDate) return true;
+    if (safeMinDate && cell < safeMinDate) return true;
     return false;
   };
 
@@ -122,23 +138,23 @@ function CalendarModal({ value, onChange, onClose, min, max }: CalendarModalProp
     if (vm === 0) { setVy(y => y - 1); setVm(11); } else setVm(m => m - 1);
   }
   function next() {
-    // Block going forward if max = today (birthdate mode)
     const nextMonth = vm === 11
       ? new Date(vy + 1, 0, 1)
       : new Date(vy, vm + 1, 1);
-    if (maxDate && nextMonth > maxDate) return;
+    if (safeMaxDate && nextMonth > safeMaxDate) return;
     if (vm === 11) { setVy(y => y + 1); setVm(0); } else setVm(m => m + 1);
   }
   function isoDay(d: number) {
     return `${vy}-${String(vm + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   }
 
-  const startYear = minDate ? minDate.getFullYear() : 1920;
-  const endYear   = maxDate ? maxDate.getFullYear() : today.getFullYear() + 5;
-  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => endYear - i);
+  const startYear = safeMinDate ? safeMinDate.getFullYear() : 1920;
+  const endYear   = safeMaxDate ? safeMaxDate.getFullYear() : today.getFullYear() + 5;
+  const safeLen = Math.max(1, endYear - startYear + 1);
+  const years = Array.from({ length: safeLen }, (_, i) => endYear - i);
 
-  const atMinMonth = minDate && vy === minDate.getFullYear() && vm === minDate.getMonth();
-  const atMaxMonth = maxDate && vy === maxDate.getFullYear() && vm === maxDate.getMonth();
+  const atMinMonth = safeMinDate && vy === safeMinDate.getFullYear() && vm === safeMinDate.getMonth();
+  const atMaxMonth = safeMaxDate && vy === safeMaxDate.getFullYear() && vm === safeMaxDate.getMonth();
 
   return (
     <div

@@ -87,8 +87,8 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
                   <code className="text-xs bg-muted px-1 rounded">last_name</code>,{" "}
                   <code className="text-xs bg-muted px-1 rounded">belongs_to</code>{" "}
                   (Binhi / Kadiwa / Buklod). Optional:{" "}
-                  <code className="text-xs bg-muted px-1 rounded">grupo</code> (free text),{" "}
                   <code className="text-xs bg-muted px-1 rounded">purok</code>,{" "}
+                  <code className="text-xs bg-muted px-1 rounded">grupo</code> (free text),{" "}
                   <code className="text-xs bg-muted px-1 rounded">birthdate</code>.
                 </p>
                 <p className="text-xs text-muted-foreground mb-3">
@@ -298,12 +298,12 @@ function AddEditMemberModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Grupo</label>
-              <Input value={form.grupo} onChange={(e) => set("grupo", e.target.value)} placeholder="e.g. 1" />
-            </div>
-            <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Purok</label>
               <Input value={form.purok} onChange={(e) => set("purok", e.target.value)} placeholder="e.g. 3" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Grupo</label>
+              <Input value={form.grupo} onChange={(e) => set("grupo", e.target.value)} placeholder="e.g. 1" />
             </div>
           </div>
 
@@ -413,8 +413,8 @@ export default function AdminMasterlistsPage() {
                   <TableHead>First name</TableHead>
                   <TableHead>M.I.</TableHead>
                   <TableHead>Belongs to</TableHead>
-                  <TableHead>Grupo</TableHead>
                   <TableHead>Purok</TableHead>
+                  <TableHead>Grupo</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead className="text-right">Events</TableHead>
@@ -438,8 +438,8 @@ export default function AdminMasterlistsPage() {
                       <TableCell>
                         <Badge tone={AFFILIATION_TONE[row.belongs_to] ?? "neutral"}>{row.belongs_to}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{row.grupo ?? "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{row.purok ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{row.grupo ?? "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{row.email ?? "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{row.phone ?? "—"}</TableCell>
                       <TableCell className="text-right">{row.events_count}</TableCell>
