@@ -161,8 +161,12 @@ class MasterlistController extends Controller
             'tags'        => [],
         ]);
 
-        $nameParts = array_filter([$fn, $mn, $ln]);
-        $initials  = implode('', array_map(fn ($p) => strtoupper($p[0]), $nameParts));
+        // then middle initial (if any), then last initial.
+        $fnInits  = implode('', array_map(
+            fn ($w) => strtoupper($w[0]),
+            array_filter(preg_split('/\s+/', trim($fn)))
+        ));
+        $initials = $fnInits . ($mn ? strtoupper($mn[0]) : '') . strtoupper($ln[0]);
         $member->login_code = $member->birthdate
             ? $initials . $member->birthdate->format('mdy')
             : $initials . str_pad((string) $member->id, 6, '0', STR_PAD_LEFT);
@@ -203,8 +207,11 @@ class MasterlistController extends Controller
         ]);
 
         $masterlist->refresh();
-        $nameParts = array_filter([$fn, $mn, $ln]);
-        $initials  = implode('', array_map(fn ($p) => strtoupper($p[0]), $nameParts));
+        $fnInits  = implode('', array_map(
+            fn ($w) => strtoupper($w[0]),
+            array_filter(preg_split('/\s+/', trim($fn)))
+        ));
+        $initials = $fnInits . ($mn ? strtoupper($mn[0]) : '') . strtoupper($ln[0]);
         $masterlist->login_code = $masterlist->birthdate
             ? $initials . $masterlist->birthdate->format('mdy')
             : $initials . str_pad((string) $masterlist->id, 6, '0', STR_PAD_LEFT);

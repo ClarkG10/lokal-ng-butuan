@@ -18,11 +18,19 @@ return new class extends Migration
         // Uses PHP to avoid LPAD(bigint) incompatibility between MySQL and PostgreSQL.
         DB::table('masterlists')->whereNull('login_code')->orderBy('id')->chunkById(500, function ($rows) {
             foreach ($rows as $row) {
-                $initials = strtoupper(substr((string) $row->first_name, 0, 1))
-                    . strtoupper(substr((string) ($row->middle_name ?? ''), 0, 1))
-                    . strtoupper(substr((string) $row->last_name, 0, 1));
+                // Split first_name by spaces so "Brixton Josh" → initials B+J
+                $fnWords  = array_filter(preg_split('/\s+/', trim((string) $row->first_name)));
+                $fnInits  = implode('', array_map(fn ($w) => strtoupper($w[0]), $fnWords));
+                $mnInit   = !empty($row->middle_name) ? strtoupper($row->middle_name[0]) : '';
+                $lnInit   = strtoupper(((string) $row->last_name)[0]);
+                $initials = $fnInits . $mnInit . $lnInit;
+
+                $suffix = $row->birthdate
+                    ? date('mdy', strtotime($row->birthdate))
+                    : str_pad((string) $row->id, 6, '0', STR_PAD_LEFT);
+
                 DB::table('masterlists')->where('id', $row->id)->update([
-                    'login_code' => $initials . str_pad((string) $row->id, 6, '0', STR_PAD_LEFT),
+                    'login_code' => $initials . $suffix,
                 ]);
             }
         });
