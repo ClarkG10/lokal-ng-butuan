@@ -15,16 +15,17 @@ return new class extends Migration
         });
 
         // Back-fill codes for existing rows: INITIALS + ID padded to 6 digits
-        DB::statement("
-            UPDATE masterlists
-            SET login_code = CONCAT(
-                UPPER(LEFT(first_name, 1)),
-                UPPER(LEFT(COALESCE(middle_name, ''), 1)),
-                UPPER(LEFT(last_name, 1)),
-                LPAD(id, 6, '0')
-            )
-            WHERE login_code IS NULL
-        ");
+        // Uses PHP to avoid LPAD(bigint) incompatibility between MySQL and PostgreSQL.
+        DB::table('masterlists')->whereNull('login_code')->orderBy('id')->chunkById(500, function ($rows) {
+            foreach ($rows as $row) {
+                $initials = strtoupper(substr((string) $row->first_name, 0, 1))
+                    . strtoupper(substr((string) ($row->middle_name ?? ''), 0, 1))
+                    . strtoupper(substr((string) $row->last_name, 0, 1));
+                DB::table('masterlists')->where('id', $row->id)->update([
+                    'login_code' => $initials . str_pad((string) $row->id, 6, '0', STR_PAD_LEFT),
+                ]);
+            }
+        });
     }
 
     public function down(): void
