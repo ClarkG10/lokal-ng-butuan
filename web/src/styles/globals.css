@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* HSL values for Tailwind theme tokens */
+    --background: 0 0% 100%;
+    --foreground: 222 39% 11%;        /* #111827 */
+    --muted: 0 0% 96%;                /* #F5F5F5 */
+    --muted-foreground: 220 9% 46%;   /* #6B7280 */
+    --border: 220 13% 91%;            /* #E5E7EB */
+    --input: 220 13% 91%;              /* same as border */
+    --ring: 222 39% 11%;               /* foreground — neutral focus ring */
+    --card: 0 0% 100%;
+    --card-foreground: 222 39% 11%;
+    --secondary-surface: 0 0% 98%;    /* #FAFAFA */
+
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+  }
+
+  /* ── Dark mode overrides ─────────────────────────────────── */
+  .dark {
+    --background: 224 25% 10%;
+    --foreground: 220 16% 94%;
+    --muted: 224 20% 16%;
+    --muted-foreground: 220 10% 58%;
+    --border: 224 18% 22%;
+    --input: 224 18% 22%;              /* same as border */
+    --ring: 220 16% 94%;               /* foreground — neutral focus ring */
+    --card: 224 22% 13%;
+    --card-foreground: 220 16% 94%;
+    --secondary-surface: 224 25% 11%;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Subtle scrollbar ───────────────────────────────────── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 80%);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 13% 65%);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 13% 80%) transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Headings use display font globally */
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Visible focus rings */
+  :where(button, a, input, textarea, select, [role="button"]):focus-visible {
+    @apply outline-none ring-2 ring-brand-yellow ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection */
+  ::selection {
+    background: #D6B452;
+    color: #111827;
+  }
+}
+
+@layer utilities {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-6 md:px-8;
+  }
+
+  .section-y {
+    @apply py-20 md:py-28 lg:py-32;
+  }
+
+  .text-hero {
+    font-size: clamp(3rem, 8vw, 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  .text-display {
+    font-size: clamp(2.25rem, 5vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Gradient gold — use on hero highlights, logo mark, primary accents */
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #F0C855 0%, #D6B452 55%, #B8942A 100%);
+  }
+}
+
+/* Reduced motion: disable marquee, parallax, large transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print layout for QR posters */
+@media print {
+  body {
+    background: #fff;
+  }
+  .print-hidden {
+    display: none !important;
+  }
+  .print-page {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Interactive transition animations
+   ───────────────────────────────────────────────────────────────── */
+
+/* 1. Mobile nav — links fade + slide down in stagger */
+@keyframes mobile-nav-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 2. Page-level content stagger entry (list rows, cards) */
+@keyframes stagger-entry {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 3. Gallery / card elastic scale-in (example 3 cubic-bezier overshoot) */
+@keyframes card-scale-in {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 4. Page loader — pulsing ring expanding from brand logo */
+@keyframes pulse-out {
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* 5. Lightbox open / close */
+@keyframes lightbox-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes lightbox-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.88); }
+}
+@keyframes lightbox-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lightbox-bg-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ─── Copy-wrap slide-up (example 2 text reveal) ─────────────── */
+@keyframes copy-reveal {
+  from { transform: translate3d(0, 100%, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+.copy-wrap-animate {
+  display: block;
+  overflow: hidden;
+}
+.copy-wrap-animate > span {
+  display: block;
+  animation: copy-reveal 0.7s cubic-bezier(0.46, 0.03, 0.52, 0.96) both;
+}
