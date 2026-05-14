@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import QRCode from "react-qr-code";
+import { QRCode } from "react-qr-code";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

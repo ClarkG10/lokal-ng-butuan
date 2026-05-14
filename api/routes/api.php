@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\SurveyResponseController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ReactionController;
+use App\Http\Controllers\Api\V1\PublicLoginController;
 use App\Http\Controllers\Api\V1\Admin\MasterlistController;
 use App\Http\Controllers\Api\V1\Admin\AnalyticsController;
+use App\Http\Controllers\Api\V1\Admin\EmailCampaignController;
 use App\Http\Controllers\Api\V1\Admin\EventMediaController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\Admin\GalleryController as AdminGalleryController;
@@ -25,6 +27,9 @@ Route::prefix('v1')->group(function () {
         Route::put('me', [AuthController::class, 'updateProfile']);
         Route::put('me/password', [AuthController::class, 'updatePassword']);
     });
+
+    /* ---------- Public identity login (for survey pre-fill) ---------- */
+    Route::post('public/login', [PublicLoginController::class, 'login'])->middleware('throttle:20,1');
 
     /* ---------- Public ---------- */
     Route::get('events', [EventController::class, 'index']);
@@ -85,6 +90,13 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:super_admin|content_manager|analytics_viewer')->group(function () {
             Route::get('masterlists', [MasterlistController::class, 'index']);
             Route::get('masterlists/export', [MasterlistController::class, 'export']);
+            Route::get('masterlists/import-template', [MasterlistController::class, 'template']);
+            Route::post('masterlists/import', [MasterlistController::class, 'import']);
+        });
+
+        Route::middleware('role:super_admin|content_manager')->group(function () {
+            Route::post('email-campaigns/preview', [EmailCampaignController::class, 'preview']);
+            Route::post('email-campaigns/send', [EmailCampaignController::class, 'send']);
         });
 
         Route::middleware('role:super_admin|content_manager|moderator|analytics_viewer')->group(function () {

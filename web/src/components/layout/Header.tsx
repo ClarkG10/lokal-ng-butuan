@@ -1,9 +1,10 @@
 import { NavLink, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/contexts/LanguageContext";
+import { usePublicAuth } from "@/contexts/PublicAuthContext";
 import type React from "react";
 
 const NAV = [
@@ -16,6 +17,7 @@ const NAV = [
 
 export function Header() {
   const { lang, toggle } = useLang();
+  const { publicUser, logout: publicLogout } = usePublicAuth();
   /** mobileVisible — controls DOM presence of the overlay */
   const [mobileVisible, setMobileVisible] = useState(false);
   /** mobileOpen — triggers the clip-path CSS transition */
@@ -85,6 +87,25 @@ export function Header() {
               <span className="text-border">|</span>
               <span className={cn("px-1 transition-colors", lang === "tl" ? "text-brand-green" : "text-muted-foreground")}>TL</span>
             </button>
+
+            {/* Signed-in member pill — name + logout in one element */}
+            {publicUser && (
+              <div className="flex items-center overflow-hidden rounded-full border border-brand-green/25 bg-brand-green/5">
+                <span className="flex items-center gap-1.5 py-1.5 pl-3 pr-2.5 text-xs font-medium text-brand-green">
+                  <User className="size-3 shrink-0" />
+                  {publicUser.first_name} {publicUser.last_name}
+                </span>
+                <button
+                  type="button"
+                  onClick={publicLogout}
+                  title="Sign out"
+                  className="flex items-center border-l border-brand-green/20 px-2.5 py-1.5 text-brand-green/50 transition-colors hover:bg-brand-green/10 hover:text-brand-green"
+                >
+                  <LogOut className="size-3" />
+                </button>
+              </div>
+            )}
+
             <Button asChild size="sm" variant="brand">
               <Link to="/events">Explore Events</Link>
             </Button>
@@ -195,6 +216,58 @@ export function Header() {
                 >
                   <Link to="/events" onClick={closeNav}>Explore Events</Link>
                 </Button>
+              </div>
+
+              {/* EN/TL language toggle */}
+              <div
+                style={{
+                  animation: "mobile-nav-in 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) both",
+                  animationDelay: `${0.7 + (NAV.length + 1) * 0.1}s`,
+                } as React.CSSProperties}
+                className="mt-4"
+              >
+                <button
+                  type="button"
+                  onClick={() => { toggle(); closeNav(); }}
+                  aria-label={`Switch to ${lang === "en" ? "Tagalog" : "English"}`}
+                  className="flex items-center gap-px rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold tracking-wide text-white transition-colors hover:bg-white/20"
+                >
+                  <span className={cn("px-1.5 transition-colors", lang === "en" ? "text-brand-yellow" : "text-white/60")}>EN</span>
+                  <span className="text-white/30">|</span>
+                  <span className={cn("px-1.5 transition-colors", lang === "tl" ? "text-brand-yellow" : "text-white/60")}>TL</span>
+                </button>
+              </div>
+
+              {/* Public user sign-in / signed-in state */}
+              <div
+                style={{
+                  animation: "mobile-nav-in 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) both",
+                  animationDelay: `${0.7 + (NAV.length + 2) * 0.1}s`,
+                } as React.CSSProperties}
+                className="mt-3"
+              >
+                {publicUser ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-sm text-white/80">
+                      Signed in as <span className="font-semibold text-white">{publicUser.first_name} {publicUser.last_name}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { publicLogout(); closeNav(); }}
+                      className="rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={closeNav}
+                    className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                  >
+                    Sign in as Member
+                  </Link>
+                )}
               </div>
             </nav>
           )}

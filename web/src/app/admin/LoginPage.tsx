@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? "/admin";
 
@@ -24,84 +25,101 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast({ title: "Welcome back", variant: "success" });
-      navigate(from, { replace: true });
+      // Fade out before navigating
+      setIsExiting(true);
+      setTimeout(() => navigate(from, { replace: true }), 600);
     } catch {
       toast({ title: "Sign-in failed", description: "Check your credentials and try again.", variant: "error" });
-    } finally {
       setSubmitting(false);
     }
   };
 
+  // Fade out on logout (if there's a way to trigger it)
+  useEffect(() => {
+    // Optional: handle logout redirect with fade-out
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12">
+    <div className={`relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-12 transition-opacity duration-600 ${isExiting ? "opacity-0" : "opacity-100"}`}>
+      {/* Subtle background accent */}
+      <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-brand-green/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-brand-green/3 blur-3xl" />
+
       {/* Brand mark */}
-      <div className="mb-10 flex flex-col items-center gap-3 text-center">
-        <span
-          className="grid size-14 place-items-center rounded-2xl font-display text-2xl font-bold text-white shadow-lg"
-          style={{ background: "linear-gradient(145deg, #014801 0%, #018402 100%)" }}
-        >
-          B
-        </span>
-        <div>
-          <p className="font-display text-lg font-bold leading-tight">Lokal ng Butuan City</p>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest mt-0.5">
-            Iglesia ni Cristo · Admin Portal
-          </p>
+      
+
+      {/* Card */}
+      <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl opacity-0 animate-fade-in" style={{ animationDelay: "200ms" }}>
+        {/* Top accent bar */}
+        <div className="h-1 w-full bg-gradient-to-r from-brand-green to-brand-green/60" />
+
+        <div className="p-8">
+          <div className="relative mb-10 flex flex-col items-center text-center opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
+       
+        <p className="font-display text-2xl font-bold tracking-tight text-gray-900">Admin Portal</p>
+        <p className="mt-1 text-sm text-gray-500">Lokal ng Butuan City Platform</p>
+      </div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Sign in</h1>
+          <p className="mt-1.5 text-sm text-gray-500">Enter your admin credentials to continue.</p>
+
+          <form onSubmit={onSubmit} className="mt-7 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border-gray-200 focus-visible:border-brand-green focus-visible:ring-brand-green/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPw ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border-gray-200 pr-10 focus-visible:border-brand-green focus-visible:ring-brand-green/20"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                  aria-label={showPw ? "Hide password" : "Show password"}
+                >
+                  {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-6 w-full bg-brand-green text-white hover:bg-brand-green/90"
+              disabled={submitting}
+              loading={submitting}
+            >
+              {submitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
         </div>
       </div>
 
-      {/* Card */}
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm hover:shadow-md transition-shadow">
-        <h1 className="text-xl font-bold tracking-tight">Sign in</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Admin credentials required.</p>
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPw ? "text" : "password"}
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label={showPw ? "Hide password" : "Show password"}
-              >
-                {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
-            </div>
-          </div>
-
-          <Button type="submit" size="lg" className="w-full" disabled={submitting} loading={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
-          </Button>
-        </form>
-      </div>
-
-      <p className="mt-6 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-foreground underline underline-offset-4">
+      <p className="relative mt-7 text-sm text-gray-500 opacity-0 animate-fade-in" style={{ animationDelay: "300ms" }}>
+        <Link to="/" className="font-medium text-gray-700 underline transition-colors hover:text-gray-900">
           ← Back to website
         </Link>
       </p>

@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, MapPin, Search, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, MapPin, User, UserCheck } from "lucide-react";
 import {
   useSurvey,
   useSubmitSurvey,
   type QuestionType,
   type SurveyQuestion,
 } from "@/features/surveys/hooks";
-import { useMasterlistSearch, type MasterlistSearchResult, type Affiliation } from "@/features/masterlists/hooks";
+import { type Affiliation } from "@/features/masterlists/hooks";
+import { usePublicAuth } from "@/contexts/PublicAuthContext";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -207,23 +208,7 @@ function IdentityStep({
   setRecordForCampaign: (v: boolean) => void;
   onNext: () => void;
 }) {
-  const [lookupQ, setLookupQ] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const { data: lookupResults } = useMasterlistSearch(lookupQ);
-
-  const fillFromLookup = (r: MasterlistSearchResult) => {
-    setRespondent({
-      first_name: r.first_name,
-      middle_name: r.middle_name ?? "",
-      last_name: r.last_name,
-      purok: r.purok ?? "",
-      belongs_to: r.belongs_to,
-      email: r.email ?? "",
-      phone: r.phone ?? "",
-    });
-    setLookupQ("");
-    setShowDropdown(false);
-  };
+  const { publicUser } = usePublicAuth();
 
   const handleContinue = () => {
     if (!respondent.first_name.trim() || !respondent.last_name.trim()) {
@@ -257,36 +242,23 @@ function IdentityStep({
       </div>
 
       <div className="space-y-6 p-6">
-        {/* Masterlist autofill search */}
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="h-10 pl-9 text-sm"
-            placeholder="Already registered? Search your name to auto-fill"
-            value={lookupQ}
-            onChange={(e) => { setLookupQ(e.target.value); setShowDropdown(true); }}
-            onFocus={() => setShowDropdown(true)}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          />
-          {showDropdown && lookupResults && lookupResults.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
-              {lookupResults.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-muted/60"
-                  onMouseDown={() => fillFromLookup(r)}
-                >
-                  <span className="flex-1 font-medium">
-                    {r.last_name}, {r.first_name}
-                    {r.middle_name && ` ${r.middle_name.charAt(0)}.`}
-                  </span>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{r.belongs_to}</span>
-                </button>
-              ))}
+        {/* Signed-in member banner */}
+        {publicUser && (
+          <div className="flex items-center gap-3 rounded-xl border border-brand-green/20 bg-brand-green/5 px-4 py-3">
+            <UserCheck className="size-4 text-brand-green shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-brand-green">Signed in as {publicUser.full_name}</p>
+              <p className="text-xs text-muted-foreground">Your details have been pre-filled. You can still edit them below.</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {!publicUser && (
+          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+            <Link to="/login" className="font-semibold text-brand-green hover:underline">Sign in as member</Link>{" "}
+            to auto-fill your details, or enter them manually below.
+          </div>
+        )}
 
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your name</p>
@@ -430,17 +402,34 @@ export default function SurveyRunnerPage() {
   const { data: survey, isLoading } = useSurvey(slug);
 
   // All hooks before any early return
+  const { publicUser } = usePublicAuth();
+
   const [answers, setAnswers] = useState<Record<number, unknown>>({});
   const [respondent, setRespondent] = useState<RespondentState>({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    purok: "",
-    belongs_to: "",
-    email: "",
-    phone: "",
+    first_name: publicUser?.first_name ?? "",
+    middle_name: publicUser?.middle_name ?? "",
+    last_name: publicUser?.last_name ?? "",
+    purok: publicUser?.purok ?? "",
+    belongs_to: (publicUser?.belongs_to as "" | Affiliation) ?? "",
+    email: publicUser?.email ?? "",
+    phone: publicUser?.phone ?? "",
   });
   const [recordForCampaign, setRecordForCampaign] = useState(true);
+
+  // Sync if publicUser changes after initial render (e.g. login on another tab)
+  useEffect(() => {
+    if (publicUser) {
+      setRespondent({
+        first_name: publicUser.first_name,
+        middle_name: publicUser.middle_name,
+        last_name: publicUser.last_name,
+        purok: publicUser.purok,
+        belongs_to: publicUser.belongs_to as "" | Affiliation,
+        email: publicUser.email,
+        phone: publicUser.phone,
+      });
+    }
+  }, [publicUser]);
   const [stepIndex, setStepIndex] = useState(0);
   const [identityDone, setIdentityDone] = useState(false);
   const [done, setDone] = useState(false);

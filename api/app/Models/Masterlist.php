@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Masterlist extends Model
 {
     protected $fillable = [
-        'first_name', 'middle_name', 'last_name', 'belongs_to', 'purok',
-        'email', 'phone', 'tags',
+        'first_name', 'middle_name', 'last_name', 'belongs_to', 'purok', 'grupo',
+        'email', 'phone', 'tags', 'birthdate', 'login_code',
         'first_seen_at', 'last_activity_at',
         'events_count', 'surveys_count', 'source',
     ];
@@ -24,6 +24,7 @@ class Masterlist extends Model
 
     protected $casts = [
         'tags' => 'array',
+        'birthdate' => 'date',
         'first_seen_at' => 'datetime',
         'last_activity_at' => 'datetime',
     ];

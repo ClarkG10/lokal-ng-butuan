@@ -11,8 +11,12 @@ export interface MasterlistRow {
   last_name: string;
   belongs_to: Affiliation;
   full_name: string;
+  purok: string | null;
+  grupo: string | null;
   email: string | null;
   phone: string | null;
+  login_code: string | null;
+  birthdate: string | null;
   events_count: number;
   surveys_count: number;
   last_activity_at: string | null;
@@ -30,6 +34,7 @@ export function useMasterlist(params: {
   min_events?: number;
   min_surveys?: number;
   belongs_to?: Affiliation | "";
+  grupo?: string;
   page?: number;
 } = {}) {
   return useQuery({
@@ -53,6 +58,7 @@ export interface MasterlistSearchResult {
   last_name: string;
   belongs_to: Affiliation;
   purok: string | null;
+  grupo: string | null;
   email: string | null;
   phone: string | null;
 }

@@ -1,11 +1,24 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ScrollToTop } from "./ScrollToTop";
 import HomePageTransition from "./HomePageTransition";
+import { usePublicAuth } from "@/contexts/PublicAuthContext";
 
 export function PublicShell() {
+  const { publicUser } = usePublicAuth();
+  const location = useLocation();
+
+  // Redirect to /login if not signed in — no guest access
+  if (!publicUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <PublicShellInner />;
+}
+
+function PublicShellInner() {
   /**
    * starts as `true` so the page content is invisible until the
    * initial loader finishes; toggled by HomePageTransition callbacks.
@@ -31,18 +44,10 @@ export function PublicShell() {
         onEnd={() => setTransitioning(false)}
       />
       <Header />
-      {/*
-        Content wrapper: hidden (opacity 0, shifted down) while transitioning,
-        then crossfades upward into view once the overlay begins to fade.
-        Both main + footer are wrapped so no content flashes during transitions.
-      */}
       <div
         className="flex flex-1 flex-col"
         style={{
           opacity:    transitioning ? 0 : 1,
-          // "none" (not translateY(0)) so we don't create a CSS stacking
-          // context after the animation ends — otherwise the lightbox z-index
-          // gets trapped inside and the sticky header paints above it.
           transform:  transitioning ? "translateY(12px)" : "none",
           transition: transitioning
             ? "none"

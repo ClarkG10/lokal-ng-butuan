@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Settings,
   Images,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const NAV = [
   { to: "/admin/gallery", label: "Gallery", icon: Images, roles: ["super_admin", "content_manager"] },
   { to: "/admin/comments", label: "Comments", icon: MessageSquare, roles: ["super_admin", "content_manager", "moderator"] },
   { to: "/admin/masterlists", label: "Masterlists", icon: Users, roles: ["super_admin", "content_manager", "analytics_viewer"] },
+  { to: "/admin/email-campaigns", label: "Email Campaigns", icon: Mail, roles: ["super_admin", "content_manager"] },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, roles: ["super_admin", "content_manager", "moderator", "analytics_viewer"] },
   { to: "/admin/users", label: "Users", icon: ShieldCheck, roles: ["super_admin"] },
   { to: "/admin/settings", label: "Settings", icon: Settings, roles: ["super_admin", "content_manager", "moderator", "analytics_viewer"] },

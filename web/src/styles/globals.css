@@ -106,6 +106,11 @@
   .bg-gold-gradient {
     background: linear-gradient(135deg, #F0C855 0%, #D6B452 55%, #B8942A 100%);
   }
+
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fade-in 0.6s cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+  }
 }
 
 /* Reduced motion: disable marquee, parallax, large transitions */
@@ -144,7 +149,13 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 2. Page-level content stagger entry (list rows, cards) */
+/* 2. Fade in — simple opacity transition */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 3. Page-level content stagger entry (list rows, cards) */
 @keyframes stagger-entry {
   from { opacity: 0; transform: translateY(18px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }

@@ -4,10 +4,12 @@ import { PublicShell } from "@/components/layout/PublicShell";
 import { AdminShell } from "@/components/layout/AdminShell";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { RequireAuth } from "@/features/auth/RequireAuth";
+import { PublicAuthProvider } from "@/contexts/PublicAuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import HomePage from "./HomePage";
 import PlaceholderPage from "./PlaceholderPage";
+import PublicLoginPage from "./PublicLoginPage";
 import EventsPage from "./EventsPage";
 import EventDetailPage from "./EventDetailPage";
 import EventSurveysPage from "./EventSurveysPage";
@@ -33,6 +35,8 @@ import AdminAnalyticsPage from "./admin/AdminAnalyticsPage";
 import AdminUsersPage from "./admin/AdminUsersPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 
+import AdminEmailCampaignPage from "./admin/AdminEmailCampaignPage";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 },
@@ -56,7 +60,8 @@ const router = createBrowserRouter([
       { path: "*", element: <PlaceholderPage title="Page not found" description="The page you're looking for doesn't exist." /> },
     ],
   },
-  { path: "/admin/login", element: <LoginPage /> },
+      { path: "/login", element: <PublicLoginPage /> },
+      { path: "/admin/login", element: <LoginPage /> },
   {
     path: "/admin",
     element: (
@@ -78,6 +83,7 @@ const router = createBrowserRouter([
       { path: "masterlists", element: <RequireAuth roles={["super_admin", "content_manager", "analytics_viewer"]}><AdminMasterlistsPage /></RequireAuth> },
       { path: "analytics", element: <AdminAnalyticsPage /> },
       { path: "users", element: <RequireAuth roles={["super_admin"]}><AdminUsersPage /></RequireAuth> },
+      { path: "email-campaigns", element: <RequireAuth roles={["super_admin", "content_manager"]}><AdminEmailCampaignPage /></RequireAuth> },
       { path: "settings", element: <RequireAuth><AdminSettingsPage /></RequireAuth> },
     ],
   },
@@ -86,12 +92,14 @@ const router = createBrowserRouter([
 export function App() {
   return (
     <LanguageProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </AuthProvider>
-      </QueryClientProvider>
+      <PublicAuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </AuthProvider>
+        </QueryClientProvider>
+      </PublicAuthProvider>
     </LanguageProvider>
   );
 }
