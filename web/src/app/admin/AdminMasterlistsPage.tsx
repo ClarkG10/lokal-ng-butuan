@@ -8,10 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { masterlistExportUrl, useMasterlist, AFFILIATIONS, type Affiliation } from "@/features/masterlists/hooks";
+import { masterlistExportUrl, useMasterlist, AFFILIATIONS, type Affiliation, type MasterlistRow } from "@/features/masterlists/hooks";
 import { toast } from "@/components/ui/toaster";
 import { api } from "@/lib/api";
-import { Download, Search, Upload, FileSpreadsheet, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Download, Search, Upload, FileSpreadsheet, X, CheckCircle2, AlertCircle, Pencil, UserPlus } from "lucide-react";
+import { Portal } from "@/components/ui/portal";
 import { formatDate } from "@/lib/utils";
 
 const AFFILIATION_TONE: Record<Affiliation, "upcoming" | "ongoing" | "completed"> = {
@@ -50,6 +51,7 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   });
 
   return (
+    <Portal>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
@@ -84,7 +86,7 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
                   <code className="text-xs bg-muted px-1 rounded">last_name</code>,{" "}
                   <code className="text-xs bg-muted px-1 rounded">belongs_to</code>{" "}
                   (Binhi / Kadiwa / Buklod). Optional:{" "}
-                  <code className="text-xs bg-muted px-1 rounded">grupo</code>,{" "}
+                  <code className="text-xs bg-muted px-1 rounded">grupo</code> (free text),{" "}
                   <code className="text-xs bg-muted px-1 rounded">purok</code>,{" "}
                   <code className="text-xs bg-muted px-1 rounded">birthdate</code>.
                 </p>
@@ -127,6 +129,7 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
               <div className="flex gap-3 justify-end">
                 <Button variant="secondary" onClick={onClose}>Cancel</Button>
                 <Button
+                  variant="default"
                   disabled={!file || importMutation.isPending}
                   loading={importMutation.isPending}
                   onClick={() => file && importMutation.mutate(file)}
@@ -158,12 +161,178 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
                   ))}
                 </div>
               )}
-              <Button className="w-full" onClick={onClose}>Done</Button>
+              <Button variant="default" className="w-full" onClick={onClose}>Done</Button>
             </div>
           )}
         </div>
       </div>
     </div>
+    </Portal>
+  );
+}
+
+/* ── Add / Edit Member Modal ────────────────────────────── */
+interface MemberForm {
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  belongs_to: Affiliation | "";
+  purok: string;
+  grupo: string;
+  email: string;
+  phone: string;
+  birthdate: string;
+}
+
+const BLANK_FORM: MemberForm = {
+  first_name: "", middle_name: "", last_name: "",
+  belongs_to: "", purok: "", grupo: "", email: "", phone: "", birthdate: "",
+};
+
+function AddEditMemberModal({
+  row,
+  onClose,
+  onDone,
+}: {
+  row?: MasterlistRow;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const isEdit = !!row;
+  const [form, setForm] = useState<MemberForm>(
+    row
+      ? {
+          first_name: row.first_name,
+          middle_name: row.middle_name ?? "",
+          last_name: row.last_name,
+          belongs_to: row.belongs_to,
+          purok: row.purok ?? "",
+          grupo: row.grupo ?? "",
+          email: row.email ?? "",
+          phone: row.phone ?? "",
+          birthdate: row.birthdate ?? "",
+        }
+      : BLANK_FORM,
+  );
+
+  const set = (k: keyof MemberForm, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        ...form,
+        middle_name: form.middle_name || null,
+        purok: form.purok || null,
+        grupo: form.grupo || null,
+        email: form.email || null,
+        phone: form.phone || null,
+        birthdate: form.birthdate || null,
+      };
+      if (isEdit) {
+        return api.put(`/admin/masterlists/${row!.id}`, payload);
+      }
+      return api.post("/admin/masterlists", payload);
+    },
+    onSuccess: () => {
+      toast({ title: isEdit ? "Member updated." : "Member added.", variant: "success" });
+      onDone();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Something went wrong.";
+      toast({ title: msg, variant: "error" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.belongs_to) {
+      toast({ title: "Belongs To is required", variant: "error" });
+      return;
+    }
+    mutation.mutate();
+  };
+
+  return (
+    <Portal>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-white shadow-2xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
+          <h2 className="font-semibold">{isEdit ? "Edit Member" : "Add Member"}</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted transition-colors">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">First Name <span className="text-red-500">*</span></label>
+              <Input required value={form.first_name} onChange={(e) => set("first_name", e.target.value)} placeholder="Juan" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Last Name <span className="text-red-500">*</span></label>
+              <Input required value={form.last_name} onChange={(e) => set("last_name", e.target.value)} placeholder="Dela Cruz" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Middle Name</label>
+            <Input value={form.middle_name} onChange={(e) => set("middle_name", e.target.value)} placeholder="Optional" />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Belongs To <span className="text-red-500">*</span></label>
+            <Select value={form.belongs_to || ""} onChange={(e) => set("belongs_to", e.target.value)} className="w-full">
+              <option value="" disabled>Select affiliation…</option>
+              {AFFILIATIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Grupo</label>
+              <Input value={form.grupo} onChange={(e) => set("grupo", e.target.value)} placeholder="e.g. 1" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Purok</label>
+              <Input value={form.purok} onChange={(e) => set("purok", e.target.value)} placeholder="e.g. 3" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Email</label>
+              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Phone</label>
+              <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="09xx-xxx-xxxx" />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Birthdate</label>
+            <Input type="date" value={form.birthdate} onChange={(e) => set("birthdate", e.target.value)} max={new Date().toISOString().split("T")[0]} />
+            <p className="text-xs text-muted-foreground">Used to generate the login code.</p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="default" disabled={mutation.isPending} loading={mutation.isPending}>
+              {isEdit ? "Save Changes" : "Add Member"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </Portal>
   );
 }
 
@@ -173,6 +342,8 @@ export default function AdminMasterlistsPage() {
   const [grupo, setGrupo] = useState("");
   const [page, setPage] = useState(1);
   const [showImport, setShowImport] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editingRow, setEditingRow] = useState<MasterlistRow | null>(null);
   const queryClient = useQueryClient();
   const { data, isLoading } = useMasterlist({ q, belongs_to: belongsTo || undefined, grupo: grupo || undefined, page });
 
@@ -182,14 +353,17 @@ export default function AdminMasterlistsPage() {
         title="Masterlists"
         description="A unified view of every member who has engaged with your community."
         actions={
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={() => setShowImport(true)}>
               <Upload className="size-4" /> Import Excel
             </Button>
-            <Button variant="default" asChild>
+            <Button variant="secondary" asChild>
               <a href={masterlistExportUrl({ q, belongs_to: belongsTo })} target="_blank" rel="noreferrer">
                 <Download className="size-4" /> Export CSV
               </a>
+            </Button>
+            <Button variant="default" onClick={() => setShowAdd(true)}>
+              <UserPlus className="size-4" /> Add Member
             </Button>
           </div>
         }
@@ -241,11 +415,12 @@ export default function AdminMasterlistsPage() {
                   <TableHead className="text-right">Surveys</TableHead>
                   <TableHead>Login Code</TableHead>
                   <TableHead>Last activity</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(data?.data?.length ?? 0) === 0 ? (
-                  <TableEmpty colSpan={12}>No members yet.</TableEmpty>
+                  <TableEmpty colSpan={13}>No members yet.</TableEmpty>
                 ) : (
                   data!.data.map((row) => (
                     <TableRow key={row.id}>
@@ -273,6 +448,16 @@ export default function AdminMasterlistsPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {row.last_activity_at ? formatDate(row.last_activity_at) : "—"}
                       </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => setEditingRow(row)}
+                          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="Edit member"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -296,6 +481,17 @@ export default function AdminMasterlistsPage() {
         <ImportModal
           onClose={() => setShowImport(false)}
           onDone={() => queryClient.invalidateQueries({ queryKey: ["masterlists"] })}
+        />
+      )}
+      {(showAdd || editingRow) && (
+        <AddEditMemberModal
+          row={editingRow ?? undefined}
+          onClose={() => { setShowAdd(false); setEditingRow(null); }}
+          onDone={() => {
+            queryClient.invalidateQueries({ queryKey: ["masterlists"] });
+            setShowAdd(false);
+            setEditingRow(null);
+          }}
         />
       )}
     </div>

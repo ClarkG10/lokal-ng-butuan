@@ -117,6 +117,101 @@ class MasterlistController extends Controller
             'errors'   => $import->errors,
         ]);
     }
+
+    /** Create a single masterlist entry */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name'  => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name'   => 'required|string|max:100',
+            'belongs_to'  => 'required|in:Binhi,Kadiwa,Buklod',
+            'purok'       => 'nullable|string|max:100',
+            'grupo'       => 'nullable|string|max:150',
+            'email'       => 'nullable|email|max:150',
+            'phone'       => 'nullable|string|max:30',
+            'birthdate'   => 'nullable|date',
+        ]);
+
+        $fn = ucwords(strtolower(trim($validated['first_name'])));
+        $mn = !empty($validated['middle_name']) ? ucwords(strtolower(trim($validated['middle_name']))) : null;
+        $ln = ucwords(strtolower(trim($validated['last_name'])));
+
+        $exists = Masterlist::where('first_name', $fn)
+            ->where('last_name', $ln)
+            ->where('belongs_to', $validated['belongs_to'])
+            ->when($mn, fn ($q) => $q->where('middle_name', $mn))
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'A member with the same name and affiliation already exists.'], 422);
+        }
+
+        $member = Masterlist::create([
+            'first_name'  => $fn,
+            'middle_name' => $mn,
+            'last_name'   => $ln,
+            'belongs_to'  => $validated['belongs_to'],
+            'purok'       => $validated['purok'] ?: null,
+            'grupo'       => $validated['grupo'] ?: null,
+            'email'       => !empty($validated['email']) ? strtolower($validated['email']) : null,
+            'phone'       => $validated['phone'] ?: null,
+            'birthdate'   => $validated['birthdate'] ?: null,
+            'source'      => 'manual',
+            'tags'        => [],
+        ]);
+
+        $nameParts = array_filter([$fn, $mn, $ln]);
+        $initials  = implode('', array_map(fn ($p) => strtoupper($p[0]), $nameParts));
+        $member->login_code = $member->birthdate
+            ? $initials . $member->birthdate->format('mdy')
+            : $initials . str_pad((string) $member->id, 6, '0', STR_PAD_LEFT);
+        $member->save();
+
+        return response()->json(['data' => $member, 'message' => 'Member created.'], 201);
+    }
+
+    /** Update a single masterlist entry */
+    public function update(Request $request, Masterlist $masterlist)
+    {
+        $validated = $request->validate([
+            'first_name'  => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name'   => 'required|string|max:100',
+            'belongs_to'  => 'required|in:Binhi,Kadiwa,Buklod',
+            'purok'       => 'nullable|string|max:100',
+            'grupo'       => 'nullable|string|max:150',
+            'email'       => 'nullable|email|max:150',
+            'phone'       => 'nullable|string|max:30',
+            'birthdate'   => 'nullable|date',
+        ]);
+
+        $fn = ucwords(strtolower(trim($validated['first_name'])));
+        $mn = !empty($validated['middle_name']) ? ucwords(strtolower(trim($validated['middle_name']))) : null;
+        $ln = ucwords(strtolower(trim($validated['last_name'])));
+
+        $masterlist->update([
+            'first_name'  => $fn,
+            'middle_name' => $mn,
+            'last_name'   => $ln,
+            'belongs_to'  => $validated['belongs_to'],
+            'purok'       => $validated['purok'] ?: null,
+            'grupo'       => $validated['grupo'] ?: null,
+            'email'       => !empty($validated['email']) ? strtolower($validated['email']) : null,
+            'phone'       => $validated['phone'] ?: null,
+            'birthdate'   => $validated['birthdate'] ?: null,
+        ]);
+
+        $masterlist->refresh();
+        $nameParts = array_filter([$fn, $mn, $ln]);
+        $initials  = implode('', array_map(fn ($p) => strtoupper($p[0]), $nameParts));
+        $masterlist->login_code = $masterlist->birthdate
+            ? $initials . $masterlist->birthdate->format('mdy')
+            : $initials . str_pad((string) $masterlist->id, 6, '0', STR_PAD_LEFT);
+        $masterlist->save();
+
+        return response()->json(['data' => $masterlist, 'message' => 'Member updated.']);
+    }
 }
 
 class MasterlistExport implements FromQuery, WithHeadings, WithMapping
@@ -177,7 +272,7 @@ class MasterlistTemplate implements FromArray, WithHeadings
     {
         // Sample row: first_name, middle_name, last_name, belongs_to, purok, grupo, email, phone, birthdate
         return [
-            ['Juan', 'Dela', 'Cruz', 'Kadiwa', 'Purok 3', 'Grupo 1', 'juan@email.com', '09171234567', '1990-05-21'],
+            ['Juan', 'Dela', 'Cruz', 'Kadiwa', '3', '1', 'juan@email.com', '09171234567', '1990-05-21'],
         ];
     }
 

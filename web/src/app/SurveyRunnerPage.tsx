@@ -305,7 +305,7 @@ function IdentityStep({
           <div className="grid gap-1.5 pt-2">
             <Input
               className="h-10"
-              placeholder="e.g. Purok 5, Baan"
+              placeholder="e.g. 5"
               required
               value={respondent.purok}
               onChange={(e) => setRespondent({ ...respondent, purok: e.target.value })}
@@ -313,10 +313,10 @@ function IdentityStep({
           </div>
         </div>
 
-        {/* Grupo / Group */}
+        {/* Belongs To */}
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Grupo <span className="font-normal normal-case">/</span> Group <span className="text-brand-red">*</span>
+            Belongs To <span className="text-brand-red">*</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(["Binhi", "Kadiwa", "Buklod"] as const).map((opt) => (

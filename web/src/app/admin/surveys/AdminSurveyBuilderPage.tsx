@@ -363,7 +363,7 @@ export default function AdminSurveyBuilderPage() {
       <div className="mt-4 rounded-xl border border-brand-green/30 bg-brand-green/5 px-4 py-3">
         <p className="text-sm font-medium text-brand-green">Identity fields (always shown first — no need to add as questions)</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Every survey automatically opens with <strong>First name</strong> and <strong>Last name</strong> (both required), <strong>Middle name</strong> (optional), plus the respondent&apos;s <strong>Group</strong> (Binhi / Kadiwa / Buklod, required).
+          Every survey automatically opens with <strong>First name</strong> and <strong>Last name</strong> (both required), <strong>Middle name</strong> (optional), plus the respondent&apos;s <strong>Belongs To</strong> (Binhi / Kadiwa / Buklod, required).
           <strong> Email</strong> and <strong>Phone</strong> are also always shown but are never required.
         </p>
       </div>

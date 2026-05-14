@@ -92,6 +92,8 @@ Route::prefix('v1')->group(function () {
             Route::get('masterlists/export', [MasterlistController::class, 'export']);
             Route::get('masterlists/import-template', [MasterlistController::class, 'template']);
             Route::post('masterlists/import', [MasterlistController::class, 'import']);
+            Route::post('masterlists', [MasterlistController::class, 'store']);
+            Route::put('masterlists/{masterlist}', [MasterlistController::class, 'update']);
         });
 
         Route::middleware('role:super_admin|content_manager')->group(function () {

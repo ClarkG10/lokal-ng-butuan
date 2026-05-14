@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { toast } from "@/components/ui/toaster";
 import { AFFILIATIONS, type Affiliation } from "@/features/masterlists/hooks";
+import { Portal } from "@/components/ui/portal";
 import {
   Eye,
   Send,
@@ -105,6 +106,7 @@ function EmailPreviewModal({
   onClose: () => void;
 }) {
   return (
+    <Portal>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
@@ -129,6 +131,7 @@ function EmailPreviewModal({
         </div>
       </div>
     </div>
+    </Portal>
   );
 }
 
@@ -201,14 +204,12 @@ export default function AdminEmailCampaignPage() {
           <div className="flex gap-2">
             <Button
               variant="secondary"
-              size="sm"
               onClick={() => setShowPreview(true)}
             >
               <Eye className="size-4" /> Preview
             </Button>
             <Button
-              size="sm"
-              variant="brand"
+              variant="default"
               onClick={handleSend}
               disabled={sendMutation.isPending}
               loading={sendMutation.isPending}
@@ -263,7 +264,7 @@ export default function AdminEmailCampaignPage() {
             <p className="text-sm font-semibold">Recipient Filters</p>
 
             <div className="space-y-1.5">
-              <Label>Grupo / Group</Label>
+              <Label>Belongs To</Label>
               <Select
                 value={filterGroup || "all"}
                 onChange={(e) =>
@@ -271,7 +272,7 @@ export default function AdminEmailCampaignPage() {
                 }
                 className="w-full"
               >
-                <option value="all">All groups</option>
+                <option value="all">All affiliations</option>
                 {AFFILIATIONS.map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
@@ -281,7 +282,7 @@ export default function AdminEmailCampaignPage() {
             <div className="space-y-1.5">
               <Label>Purok / Area</Label>
               <Input
-                placeholder="e.g. Purok 3 (optional)"
+                placeholder="e.g. 3 (optional)"
                 value={filterPurok}
                 onChange={(e) => setFilterPurok(e.target.value)}
                 className="h-9"
