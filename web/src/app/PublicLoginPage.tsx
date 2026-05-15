@@ -492,16 +492,17 @@ export default function PublicLoginPage() {
                 autoComplete="off"
                 autoFocus
                 maxLength={6}
-                placeholder="e.g. JDC"
+                placeholder="e.g. MAC"
                 value={initials}
                 onChange={e =>
                   setInitials(e.target.value.toUpperCase().replace(/[^A-Za-z]/g, ""))
                 }
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 font-mono text-xl font-bold tracking-[0.22em] text-gray-900 placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400 outline-none transition-all focus:border-brand-green focus:ring-1 focus:ring-brand-green/20"
               />
-              <p className="text-xs text-gray-400">
-                First letter of each name — Juan Dela Cruz →{" "}
-                <span className="font-mono font-semibold text-gray-600">JDC</span>
+              <p className="text-xs text-gray-500">
+                First letters of your first name, second name (if applicable), and last name initial — 
+                Mark Anthony Cruz →{" "}
+                <span className="font-mono font-semibold text-gray-600">MAC</span>
               </p>
             </div>
 
